@@ -1,84 +1,29 @@
 docker-java-sample-webapp
 =========================
 
-## Getting started
+## Problems with OpenShift 3.10.
+* Without proper ServiceAccount configuration the pod never started with mounted/env used secrets.
+* Haproxy-Route url rewrite capability missing.
+* Haproxy-Route missing 80 to 443 redirect.
+* Missing logging, monitoring for pods.
 
-- Build the java app
-
-`mvn clean install`
-
-- Take the war file from `target` & put it into `src/main/docker` directory.
-
-## Docker commands approach
-
-- Go into `src/main/docker` directory
-
-- Build the docker image
-
-`docker build -t tomcat:1 .`
-
-- Run the image inside a container
-
-`docker container run -p 8080:8080 tomcat:1`
-
-- Go to `http://localhost:8080/docker-java-sample-webapp-1.0-SNAPSHOT?name=World` & see the app running in docker
-
-- List all containers
-
-`docker container ls`
-
-- Stop container
-
-`docker container kill <container-id>`
-
-- Remove container
-
-`docker rm <container-id>`
-
-- List all images
-
-`docker images`
-
-- Remove image
-
-`docker rmi tomcat:1`
-
-- Remove base image
-
-`docker rmi bitnami/tomcat:latest`
-
-## Docker compose approach
-
-- Go into `src/main/docker` directory
-
-- Execute the command
-
-`docker-compose up`
-
-- When it is stopped, the corresponding containers are deleted also. But images remain. They have to be deleted using commands.
-
-## Kubernetes approach
-
-- Use docker edge channel. It has inbuilt kubernetes support.
-
-- To get kubernetes dashboard running
-
-- `kubectl cluster-info`
-- `kubectl -n kube-system edit service kubernetes-dashboard`
-- `You should see yaml representation of the service. Change type: ClusterIP to type: NodePort and save file. If it's already changed go to next step.`
-- `kubectl -n kube-system get service kubernetes-dashboard`
-
-- Now deploy the war
-
-- Use helm 2.8.2
-- `helm.exe install .`
-
-- To delete entire deployment
-- `kubectl delete deployment kissing-fish-java-sample-webapp`
+## Files:
+* src/main/docker/Dockerfile used for building the container
+* kubernetes.yaml file for deploying the app with predefined ingress host and secret
 
 
-## Extras
+## Usage
+Edit kubernetes.yml with the correct url and secret name then: `kubectl apply -f kubernetes.yaml`
 
-- Log into the container
+## Test it:
+Check if pod is running:
 
-`docker exec -it [container-id] bash`
+* `kubectl get pods --field-selector=status.phase=Running -l app=java-sample`
+* `kubectl run -i -t busybox --image=busybox --restart=Never`
+* `curl -v http://java-sample:8080/?name=World`
+* `curl -v http://java-sample:8080/docker-java-sample-webapp-1.0-SNAPSHOT?name=World`
+
+Check if rewrite is working through ingress
+* `export INGRESS_URL=$(kubectl get ingress pod-service -ojsonpath='{.spec.rules[*].host}')`
+* `curl -vL http://$INGRESS_URL/?name=World` or `open http://$INGRESS_URL/?name=World`
+* `curl -vL http://$INGRESS_URL/docker-java-sample-webapp-1.0-SNAPSHOT?name=World` or `open http://$INGRESS_URL/docker-java-sample-webapp-1.0-SNAPSHOT?name=World`
