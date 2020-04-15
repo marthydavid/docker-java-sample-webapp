@@ -14,7 +14,7 @@ docker-java-sample-webapp
 
 ## Usage
 Edit kubernetes.yml with the correct url and secret name then: `kubectl apply -f kubernetes.yaml`
-
+Or install it with helm it's located under src/main/kubernetes/helm-chart
 ## Test it:
 Check if pod is running:
 
